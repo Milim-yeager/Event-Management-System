@@ -30,6 +30,18 @@ class Event:
         self.description = description
         self.ticket_price = ticket_price
         self.email = email_admin
+        self.participants = []  # لیست شرکت‌کنندگان
+
+    def add_participant(self, participant):
+        self.participants.append(participant)
+
+    def remove_participant(self, participant):
+        self.participants.remove(participant)
+
+    def edit_participant(self, old_participant, new_participant):
+        index = self.participants.index(old_participant)
+        self.participants[index] = new_participant
+
 
 
 class EventManager:
@@ -84,6 +96,54 @@ class EventManager:
             messagebox.showinfo("Event not found", "There are no events on this date")
 
 
+def show_participants(event):
+    participants_window = tk.Toplevel(window)
+    participants_window.title(f"Participants for {event.name}")
+
+    participants_listbox = tk.Listbox(participants_window, font=("arial", 12))
+    participants_listbox.pack()
+
+    for participant in event.participants:
+        participants_listbox.insert(tk.END, participant)
+
+    def remove_selected_participant():
+        selected_indices = participants_listbox.curselection()
+        if selected_indices:
+            index = selected_indices[0]
+            participant = event.participants[index]
+            event.remove_participant(participant)
+            participants_listbox.delete(index)
+
+    def edit_selected_participant():
+        selected_indices = participants_listbox.curselection()
+        if selected_indices:
+            index = selected_indices[0]
+            old_participant = event.participants[index]
+
+            edit_window = tk.Toplevel(participants_window)
+            edit_window.title("Edit Participant")
+
+            new_participant_entry = tk.Entry(edit_window, font=("arial", 12))
+            new_participant_entry.pack()
+            new_participant_entry.insert(0, old_participant)
+
+            def save_edit():
+                new_participant = new_participant_entry.get()
+                event.edit_participant(old_participant, new_participant)
+                participants_listbox.delete(index)
+                participants_listbox.insert(index, new_participant)
+                edit_window.destroy()
+
+            save_button = tk.Button(edit_window, text="Save", command=save_edit)
+            save_button.pack()
+            
+    remove_button = tk.Button(participants_window, text="Remove Selected", command=remove_selected_participant)
+    remove_button.pack()
+
+    edit_button = tk.Button(participants_window, text="Edit Selected", command=edit_selected_participant)
+    edit_button.pack()
+
+
 def close_all_top_levels():
     for widget in window.winfo_children():
         if isinstance(widget, tk.Toplevel):
@@ -102,12 +162,12 @@ def create_event_button_clicked():
     location = location_entry.get()
     description = description_entry.get()
     ticket_price = ticket_price_entry.get()
-    price_pattern = r'\d+(\.\d+)?'
+    price_pattern = r'^\d*\.?\d+$'
     if not bool(re.match(price_pattern, ticket_price)):
-        messagebox.showerror("pattern error", "ticket price is wrong")
+        messagebox.showerror("pattern error", "ticket price is wrong\nplease use float number")
         return 0
     email_admin = admin_email_entry.get()
-    email_pattern = r'^[a-zA-Z0-9](\.?[a-zA-Z0-9]){5,29}@gmail\.com'
+    email_pattern = r'^[a-zA-Z](\.?[a-zA-Z0-9]){5,29}@gmail\.com'
     if not bool(re.match(email_pattern, email_admin)):
         messagebox.showerror("pattern error", "gmail is wrong")
         return 0
@@ -120,27 +180,24 @@ def create_event_button_clicked():
 def buy_ticket_button_clicked(buyer, email):
     selected_indices = event_listbox.curselection()
     if not selected_indices:
-        messagebox.showerror("Error", "no event selected")
+        messagebox.showerror("Error", "No event selected")
         return
     index = selected_indices[0]
     selected_event = event_manager.events[index]
 
     email_pattern = r'^[a-zA-Z0-9._%+-]+@gmail\.com$'
     if not bool(re.match(email_pattern, email)):
-        messagebox.showinfo(selected_event.name,
-                            "Gmail is wrong\nUnsuccessful purchase")
+        messagebox.showinfo(selected_event.name, "Gmail is wrong\nUnsuccessful purchase")
         return 0
     else:
-        message = f"Event: {selected_event.name}\nDate:\
-            {selected_event.date}\nTime: {selected_event.time}\nLocation:\
-            {selected_event.location}\nDiscription:\
-            {selected_event.description}"
+        message = f"Event: {selected_event.name}\nDate: {selected_event.date}\nTime: {selected_event.time}\nLocation: {selected_event.location}\nDescription: {selected_event.description}"
 
-        if (send_email(email, "Event information", message)):
+        if send_email(email, "Event information", message):
             messagebox.showinfo(selected_event.name, "Successful purchase")
+            selected_event.add_participant(buyer)  # اضافه کردن شرکت‌کننده به لیست
 
         admin_g = event_manager.find_admin_email(selected_event.name)
-        send_email(admin_g, "task your event", f"A person named {buyer} bought your event\nplease do the work for this buyer and manage the event for this person\n\n\nEvent management system")
+        send_email(admin_g, "Task your event", f"A person named {buyer} bought your event\nPlease do the work for this buyer and manage the event for this person\n\n\nEvent management system")
 
     event_manager.refresh_event_listbox()
     close_all_top_levels()
@@ -177,6 +234,14 @@ def send_email(receiver_email, subject, message):
 
 
 def save_to_database(username, password, email):
+    email_pattern = r'^[a-zA-Z0-9._%+-]+@gmail\.com$'
+    password_pattern = r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d]{8,}$'
+    if not bool(re.match(email_pattern, email)):
+        messagebox.showerror("pattern error", "email is wrong")
+        return 0
+    if not bool(re.match(password_pattern, password)):
+        messagebox.showerror("pattern error", "password is weak\npassword must include [a-zA-Z0-9] and 8 character")
+        return 0
     conn = sqlite3.connect('user.db')
     c = conn.cursor()
 
@@ -252,7 +317,7 @@ def sign_inup(name_event):
 
         pass_label = tk.Label(popup_window2, text="Password")
         pass_label.pack()
-        pass_entry = tk.Entry(popup_window2)
+        pass_entry = tk.Entry(popup_window2, show="*")
         pass_entry.pack()
 
         buy_ticket_bitton = tk.Button(popup_window2, text="Sign in & buy ticket", command=lambda: check_info(user_entry.get(), pass_entry.get()))
@@ -269,13 +334,14 @@ def on_event_select(event):
     popup_window = tk.Toplevel(window)
     popup_window.title(selected_event.name)
 
-    details_label = tk.Label(popup_window, text=f"Date:\
-        {selected_event.date}\nTime: {selected_event.time}\nLocation:\
-        {selected_event.location}\nDiscription: {selected_event.description}")
+    details_label = tk.Label(popup_window, text=f"Date: {selected_event.date}\nTime: {selected_event.time}\nLocation: {selected_event.location}\nDescription: {selected_event.description}")
     details_label.pack()
 
     buy_ticket_button = tk.Button(popup_window, text="Buy ticket", command=sign_inup(selected_event.name))
     buy_ticket_button.pack()
+
+    show_participants_button = tk.Button(popup_window, text="Show Participants", command=lambda: show_participants(selected_event))
+    show_participants_button.pack()
 
 
 event_manager = EventManager()

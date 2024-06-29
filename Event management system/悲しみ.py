@@ -10,17 +10,6 @@ import os
 from tkinter import PhotoImage
 
 
-class User:
-    def __init__(self, email):
-        self.email = email
-
-
-class Ticket:
-    def __init__(self, event_name, price):
-        self.event_name = event_name
-        self.price = price
-
-
 class Event:
     def __init__(self, name, date, time, location, description, ticket_price, email_admin):
         self.name = name
@@ -185,7 +174,7 @@ def buy_ticket_button_clicked(buyer, email):
     index = selected_indices[0]
     selected_event = event_manager.events[index]
 
-    email_pattern = r'^[a-zA-Z0-9._%+-]+@gmail\.com$'
+    email_pattern = r'^[a-zA-Z](\.?[a-zA-Z0-9]){5,29}@gmail\.com'
     if not bool(re.match(email_pattern, email)):
         messagebox.showinfo(selected_event.name, "Gmail is wrong\nUnsuccessful purchase")
         return 0
@@ -196,8 +185,8 @@ def buy_ticket_button_clicked(buyer, email):
             messagebox.showinfo(selected_event.name, "Successful purchase")
             selected_event.add_participant(buyer)  # اضافه کردن شرکت‌کننده به لیست
 
-        admin_g = event_manager.find_admin_email(selected_event.name)
-        send_email(admin_g, "Task your event", f"A person named {buyer} bought your event\nPlease do the work for this buyer and manage the event for this person\n\n\nEvent management system")
+            admin_g = event_manager.find_admin_email(selected_event.name)
+            send_email(admin_g, "Task your event", f"A person named {buyer} bought your event\nPlease do the work for this buyer and manage the event for this person\n\n\nEvent management system")
 
     event_manager.refresh_event_listbox()
     close_all_top_levels()
@@ -234,7 +223,7 @@ def send_email(receiver_email, subject, message):
 
 
 def save_to_database(username, password, email):
-    email_pattern = r'^[a-zA-Z0-9._%+-]+@gmail\.com$'
+    email_pattern = r'^[a-zA-Z](\.?[a-zA-Z0-9]){5,29}@gmail\.com'
     password_pattern = r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d]{8,}$'
     if not bool(re.match(email_pattern, email)):
         messagebox.showerror("pattern error", "email is wrong")

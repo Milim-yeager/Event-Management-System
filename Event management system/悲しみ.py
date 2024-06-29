@@ -68,12 +68,10 @@ class EventManager:
 
     def select_date(self):
         selected_date = self.calendar.get_date()
-        # selected_date = standardize_date(selected_date)
         self.calendar_window.destroy()
 
         event_found = False
         for event in self.events:
-            print(event.date, selected_date)
             if event.date == selected_date:
                 event_found = True
                 event_details = f"Event:{event.name}\nDate:{event.date}\

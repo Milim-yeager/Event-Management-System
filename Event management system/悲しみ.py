@@ -181,7 +181,7 @@ def buy_ticket_button_clicked(buyer, email):
 
         if send_email(email, "Event information", message):
             messagebox.showinfo(selected_event.name, "Successful purchase")
-            selected_event.add_participant(buyer)  # اضافه کردن شرکت‌کننده به لیست
+            selected_event.add_participant(buyer)
 
             admin_g = event_manager.find_admin_email(selected_event.name)
             send_email(admin_g, "Task your event", f"A person named {buyer} bought your event\nPlease do the work for this buyer and manage the event for this person\n\n\nEvent management system")
@@ -269,9 +269,6 @@ def open_registration_window():
 
     save_button = tk.Button(registration_window, text="Save", command=lambda: save_to_database(username_entry.get(), password_entry.get(), email_entry.get()))
     save_button.pack()
-
-    # open_registration_button = tk.Button(registration_window, text="Open Registration", command=open_registration_window)
-    # open_registration_button.pack()
 
 
 def check_info(username, password):

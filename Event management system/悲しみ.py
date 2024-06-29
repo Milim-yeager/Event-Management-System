@@ -19,7 +19,7 @@ class Event:
         self.description = description
         self.ticket_price = ticket_price
         self.email = email_admin
-        self.participants = []  # لیست شرکت‌کنندگان
+        self.participants = []
 
     def add_participant(self, participant):
         self.participants.append(participant)
@@ -53,7 +53,7 @@ class EventManager:
         self.calendar_window.title("Calendar events")
 
         self.calendar = Calendar(self.calendar_window, selectmode='day',
-                                 year=2024, month=5, day=29)
+                                 year=2024, month=6, day=29)
         self.calendar.pack(pady=20)
 
         select_date_button = tk.Button(self.calendar_window,

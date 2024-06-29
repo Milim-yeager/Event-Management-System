@@ -75,7 +75,7 @@ class EventManager:
             if event.date == selected_date:
                 event_found = True
                 event_details = f"Event:{event.name}\nDate:{event.date}\
-                \nTime:{event.name}\nLocation:{event.location}\
+                \nTime:{event.time}\nLocation:{event.location}\
                 \nDiscription:{event.description}"
                 messagebox.showinfo("Event found", event_details)
                 break
